@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#4f46e5">
+<title>مخطط الدراسة</title>
+<style>
+/* ========== الألوان والمتغيرات (الوضع النهاري والليلي) ========== */
+:root{--bg:#f4f6fb;--card:#fff;--text:#1c2330;--muted:#6b7587;--line:#e3e8f0;--pri:#4f46e5;--pri-t:#fff;--red:#dc2626;--orange:#d97706;--green:#16a34a;--r:14px}
+[data-theme=dark]{--bg:#0f1420;--card:#182030;--text:#e8ecf4;--muted:#93a0b6;--line:#2a3550;--pri:#818cf8;--pri-t:#0f1420;--red:#f87171;--orange:#fbbf24;--green:#4ade80}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;padding-bottom:84px}
+header{position:sticky;top:0;z-index:10;background:var(--card);border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:12px 16px}
+header h1{font-size:18px}
+button{font:inherit;cursor:pointer;border:none;border-radius:10px;padding:8px 14px;background:var(--line);color:var(--text)}
+button.pri{background:var(--pri);color:var(--pri-t);font-weight:600}
+button.danger{color:var(--red)}
+button.sm{padding:5px 10px;font-size:13px}
+main{max-width:720px;margin:0 auto;padding:16px}
+.view{display:none}.view.on{display:block}
+h2{font-size:17px;margin:4px 0 12px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.row.between{justify-content:space-between}
+.muted{color:var(--muted);font-size:13px}
+.empty{text-align:center;color:var(--muted);padding:32px 12px;background:var(--card);border:1px dashed var(--line);border-radius:var(--r)}
+
+/* ========== بطاقة الموعد ========== */
+.card{background:var(--card);border:1px solid var(--line);border-inline-start:6px solid var(--c,var(--pri));border-radius:var(--r);padding:14px;margin-bottom:12px}
+.card.fin{opacity:.65}
+.card h3{font-size:16px;margin:6px 0 2px}
+.badge{display:inline-block;font-size:12px;padding:1px 9px;border-radius:99px;background:var(--c,var(--pri));color:#fff}
+.subj{font-size:13px;color:var(--muted);margin-inline-start:6px}
+.count{font-weight:700;margin:6px 0}
+.count.late{color:var(--red)}.count.soon{color:var(--orange)}.count.ok{color:var(--green)}
+.bar{height:8px;background:var(--line);border-radius:99px;overflow:hidden;margin:6px 0}
+.bar>i{display:block;height:100%;background:var(--c,var(--pri));border-radius:99px;transition:width .3s}
+.rems{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}
+.rems span{font-size:12px;background:var(--bg);border:1px solid var(--line);border-radius:99px;padding:0 8px}
+details{margin:6px 0}
+summary{cursor:pointer;font-size:14px;color:var(--pri)}
+.lesson{display:flex;gap:8px;align-items:center;padding:4px 0;font-size:14px}
+.lesson input{width:18px;height:18px;accent-color:var(--pri)}
+.lesson.done span{text-decoration:line-through;color:var(--muted)}
+.actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+
+/* ========== الخطة ========== */
+.day{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;margin-bottom:10px}
+.day.today{border-color:var(--pri);box-shadow:0 0 0 1px var(--pri)}
+.day h3{font-size:15px;display:flex;justify-content:space-between;gap:8px}
+.warn{color:var(--orange);font-size:13px}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--c);margin-inline-end:4px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-bottom:12px}
+
+/* ========== النماذج ========== */
+label{display:block;font-size:13px;color:var(--muted);margin:10px 0 3px}
+input,select,textarea{width:100%;font:inherit;color:var(--text);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+input[type=color]{padding:2px;height:40px}
+input[type=checkbox]{width:auto}
+textarea{min-height:90px;resize:vertical}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{background:var(--bg);border:1px solid var(--line);border-radius:99px;padding:3px 12px;font-size:13px}
+.chip.on{background:var(--pri);color:var(--pri-t);border-color:var(--pri)}
+dialog{border:none;border-radius:var(--r);padding:18px;width:min(560px,94vw);max-height:92vh;background:var(--card);color:var(--text);margin:auto}
+dialog::backdrop{background:#0008}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+/* ========== الشريط السفلي والتنبيهات ========== */
+nav{position:fixed;bottom:0;inset-inline:0;background:var(--card);border-top:1px solid var(--line);display:flex;padding-bottom:env(safe-area-inset-bottom);z-index:10}
+nav button{flex:1;border-radius:0;background:none;padding:10px 4px;font-size:12px;color:var(--muted)}
+nav button.on{color:var(--pri);font-weight:700}
+nav button b{display:block;font-size:20px;line-height:1.2}
+#toasts{position:fixed;top:60px;inset-inline:12px;z-index:50;display:flex;flex-direction:column;gap:8px;max-width:520px;margin:auto}
+.toast{background:var(--pri);color:var(--pri-t);padding:10px 14px;border-radius:12px;display:flex;justify-content:space-between;gap:10px;box-shadow:0 4px 14px #0004}
+.toast button{background:#fff3;color:inherit;padding:0 8px}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>📚 مخطط الدراسة</h1>
+  <button data-act="theme" title="الوضع الليلي">🌓</button>
+</header>
+<div id="toasts"></div>
+
+<main>
+  <!-- ========== الرئيسية: المواعيد ========== -->
+  <section class="view on" id="v-home">
+    <div class="row between" style="margin-bottom:12px">
+      <h2 style="margin:0">المواعيد القادمة</h2>
+      <div class="row">
+        <button class="sm" data-act="ics">📅 للتقويم</button>
+        <button class="pri" data-act="newEvent">＋ موعد</button>
+      </div>
+    </div>
+    <div id="homeList"></div>
+  </section>
+
+  <!-- ========== خطة المذاكرة ========== -->
+  <section class="view" id="v-plan">
+    <h2>خطة المذاكرة</h2>
+    <div class="panel">
+      <div class="grid2">
+        <div><label>ساعات المذاكرة المتاحة باليوم</label><input type="number" id="hoursPerDay" min="0.5" step="0.5"></div>
+        <div><label>ساعات الدرس الواحد (تقريباً)</label><input type="number" id="perLesson" min="0.25" step="0.25"></div>
+      </div>
+      <p class="muted" style="margin-top:8px">الصفحة توزع دروسك المتبقية بالتساوي على الأيام قبل كل موعد. كل ما علّمت درس "تم" تتعدل الخطة.</p>
+    </div>
+    <div id="planList"></div>
+  </section>
+
+  <!-- ========== المواد ========== -->
+  <section class="view" id="v-subj">
+    <h2>المواد</h2>
+    <form class="panel" id="subjForm">
+      <div class="grid2">
+        <div><label>اسم المادة</label><input name="name" required placeholder="مثلاً: T216A"></div>
+        <div><label>اللون</label><input name="color" type="color" value="#4f46e5"></div>
+      </div>
+      <button class="pri" style="margin-top:12px">إضافة المادة</button>
+    </form>
+    <div id="subjList"></div>
+  </section>
+
+  <!-- ========== الإعدادات ========== -->
+  <section class="view" id="v-set">
+    <h2>الإعدادات والبيانات</h2>
+    <div class="panel">
+      <b>تنبيهات المتصفح</b>
+      <p class="muted">تشتغل فقط والصفحة مفتوحة. للتنبيهات الأكيدة على الجوال استخدم التصدير للتقويم.</p>
+      <button style="margin-top:8px" data-act="notif">🔔 تفعيل التنبيهات</button>
+    </div>
+    <div class="panel">
+      <b>التصدير للتقويم (.ics)</b>
+      <p class="muted">يضيف كل المواعيد مع تذكيراتك. افتح الملف على الجوال واختر إضافة للتقويم.</p>
+      <label><input type="checkbox" id="icsPlan"> أضف خطة المذاكرة كأحداث يومية</label>
+      <button class="pri" style="margin-top:8px" data-act="ics2">📅 تصدير ملف التقويم</button>
+    </div>
+    <div class="panel">
+      <b>نسخة احتياطية</b>
+      <p class="muted">البيانات محفوظة في هذا المتصفح فقط. استخدم التصدير لنقلها لجهاز ثاني.</p>
+      <div class="row" style="margin-top:8px">
+        <button data-act="exportJson">⬇️ تصدير</button>
+        <button data-act="importJson">⬆️ استيراد</button>
+        <button class="danger" data-act="wipe">🗑 مسح كل شي</button>
+      </div>
+      <input type="file" id="importFile" accept=".json,application/json" hidden>
+    </div>
+  </section>
+</main>
+
+<nav>
+  <button class="on" data-act="tab" data-v="home"><b>🗓</b>المواعيد</button>
+  <button data-act="tab" data-v="plan"><b>✅</b>الخطة</button>
+  <button data-act="tab" data-v="subj"><b>🎨</b>المواد</button>
+  <button data-act="tab" data-v="set"><b>⚙️</b>الإعدادات</button>
+</nav>
+
+<!-- ========== نافذة إضافة / تعديل موعد ========== -->
+<dialog id="evDlg">
+  <form id="evForm">
+    <h2 id="evTitle">موعد جديد</h2>
+    <div class="grid2">
+      <div><label>المادة</label><select name="subject"></select></div>
+      <div><label>النوع</label>
+        <select name="type">
+          <option value="exam">امتحان</option><option value="quiz">كويز</option>
+          <option value="project">مشروع</option><option value="assignment">أسايمنت</option>
+        </select></div>
+    </div>
+    <label>العنوان</label><input name="title" required placeholder="مثلاً: الامتحان النهائي">
+    <label>التاريخ والوقت (بتوقيت البحرين)</label><input name="dt" type="datetime-local" required>
+    <label>المحتوى المطلوب</label><input name="content" placeholder="مثلاً: الفصول 1 إلى 5">
+    <label>الدروس / الخطوات (سطر لكل درس، اختياري)</label>
+    <textarea name="lessons" placeholder="Chapter 1&#10;Chapter 2&#10;Chapter 3"></textarea>
+    <label>التذكيرات (اختر أكثر من واحد)</label>
+    <div class="chips" id="chips"></div>
+    <div class="row" style="margin-top:8px">
+      <input type="number" id="cuN" min="1" value="1" style="width:80px">
+      <select id="cuU" style="width:110px"><option value="1">دقيقة</option><option value="60">ساعة</option><option value="1440" selected>يوم</option></select>
+      <button type="button" class="sm" data-act="addRem">＋ تذكير مخصص</button>
+    </div>
+    <div class="row between" style="margin-top:18px">
+      <button class="pri">حفظ</button>
+      <button type="button" data-act="closeDlg">إلغاء</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+/* =====================================================
+   مخطط الدراسة - ملف واحد
+   1) الحالة والحفظ  2) دوال التاريخ  3) الرسم (render)
+   4) النموذج  5) خطة المذاكرة  6) التقويم .ics
+   7) التذكيرات  8) الأحداث (الضغطات)
+   ===================================================== */
+
+/* ---------- 1) الحالة والحفظ ---------- */
+const KEY = 'studyPlanner.v1';
+const TYPES = {exam:'امتحان', quiz:'كويز', project:'مشروع', assignment:'أسايمنت'};
+const PRESETS = [10080, 4320, 1440, 180, 120, 60, 30]; // بالدقائق
+const $ = s => document.querySelector(s);
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+function load() {
+  let s = null;
+  try { s = JSON.parse(localStorage.getItem(KEY)); } catch (e) {}
+  s = Object.assign({subjects: [], events: [], settings: {}, fired: {}}, s || {});
+  s.settings = Object.assign({hours: 3, perLesson: 1, dark: null}, s.settings);
+  return s;
+}
+let S = load();
+function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
+
+/* ---------- 2) دوال التاريخ (توقيت البحرين UTC+3 بدون توقيت صيفي) ---------- */
+const TZ = 3 * 3600e3;
+const pad = n => String(n).padStart(2, '0');
+// "2026-10-20T09:00" (توقيت البحرين) -> ميلي ثانية عالمية
+function bhMs(str) {
+  const [d, t] = str.split('T'); const [y, m, da] = d.split('-').map(Number); const [h, mi] = t.split(':').map(Number);
+  return Date.UTC(y, m - 1, da, h - 3, mi);
+}
+const keyFromDate = d => d.getUTCFullYear() + '-' + pad(d.getUTCMonth() + 1) + '-' + pad(d.getUTCDate());
+const keyOf = ms => keyFromDate(new Date(ms + TZ));            // مفتاح اليوم في البحرين
+const keyToUTC = k => { const [y, m, d] = k.split('-').map(Number); return Date.UTC(y, m - 1, d); };
+const addDays = (k, n) => keyFromDate(new Date(keyToUTC(k) + n * 864e5));
+function range(a, b) { const out = []; for (let k = a; k <= b; k = addDays(k, 1)) out.push(k); return out; }
+const ms = ev => bhMs(ev.dt);
+const fmtDT = t => new Date(t).toLocaleString('ar-u-nu-latn', {timeZone: 'Asia/Bahrain', weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit'});
+const fmtDay = k => new Date(keyToUTC(k)).toLocaleDateString('ar-u-nu-latn', {weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC'});
+
+function plural(n, w) { return n === 1 ? w[0] : n === 2 ? w[1] : n <= 10 ? n + ' ' + w[2] : n + ' ' + w[3]; }
+const U = {d: ['يوم', 'يومين', 'أيام', 'يوم'], h: ['ساعة', 'ساعتين', 'ساعات', 'ساعة'], m: ['دقيقة', 'دقيقتين', 'دقائق', 'دقيقة']};
+function remLabel(m) {
+  if (m === 10080) return 'قبل أسبوع';
+  if (m % 1440 === 0) return 'قبل ' + plural(m / 1440, U.d);
+  if (m % 60 === 0) return 'قبل ' + plural(m / 60, U.h);
+  return 'قبل ' + plural(m, U.m);
+}
+function countdown(t) {
+  const diff = t - Date.now(), a = Math.abs(diff);
+  const d = Math.floor(a / 864e5), h = Math.floor(a % 864e5 / 36e5), m = Math.floor(a % 36e5 / 6e4);
+  const txt = d > 0 ? plural(d, U.d) + ' و ' + plural(h, U.h) : h > 0 ? plural(h, U.h) + ' و ' + plural(m, U.m) : plural(m, U.m);
+  if (diff < 0) return {txt: 'فات من ' + txt, cls: 'late'};
+  return {txt: 'باقي ' + txt, cls: diff < 48 * 36e5 ? 'soon' : 'ok'};
+}
+
+/* ---------- حالات الموعد والتقدم ---------- */
+const isFinished = ev => ev.done || (ms(ev) < Date.now() && (ev.type === 'exam' || ev.type === 'quiz'));
+const subjOf = id => S.subjects.find(s => s.id === id) || {name: '؟', color: '#888'};
+function evProgress(ev) {
+  if (ev.lessons.length) return ev.done ? 1 : ev.lessons.filter(l => l.done).length / ev.lessons.length;
+  return ev.done ? 1 : 0;
+}
+function subjProgress(id) {
+  let tot = 0, dn = 0;
+  S.events.filter(e => e.subjectId === id).forEach(e => {
+    const w = e.lessons.length || 1;
+    tot += w; dn += evProgress(e) * w;
+  });
+  return tot ? dn / tot : 0;
+}
+
+/* ---------- 3) الرسم ---------- */
+const openSet = new Set(); // لتذكر الدروس المفتوحة
+function toggleOpen(id, o) { o ? openSet.add(id) : openSet.delete(id); }
+
+function cardHTML(ev) {
+  const s = subjOf(ev.subjectId), t = ms(ev), fin = isFinished(ev), p = evProgress(ev);
+  const c = countdown(t);
+  const cd = fin ? '<div class="count ok">✔ منتهي</div>' : `<div class="count ${c.cls}">⏳ ${c.txt}</div>`;
+  const done = ev.lessons.filter(l => l.done).length;
+  const lessons = ev.lessons.length ? `
+    <div class="bar"><i style="width:${Math.round(p * 100)}%"></i></div>
+    <details ${openSet.has(ev.id) ? 'open' : ''} ontoggle="toggleOpen('${ev.id}',this.open)">
+      <summary>${done}/${ev.lessons.length} درس مكتمل</summary>
+      ${ev.lessons.map((l, i) => `<label class="lesson ${l.done ? 'done' : ''}" style="margin:0;color:inherit">
+        <input type="checkbox" data-act="lesson" data-ev="${ev.id}" data-i="${i}" ${l.done ? 'checked' : ''}><span>${esc(l.n)}</span></label>`).join('')}
+    </details>` : '';
+  const rems = ev.reminders.length ? `<div class="rems">${ev.reminders.map(m => `<span>🔔 ${remLabel(m)}</span>`).join('')}</div>` : '';
+  const doneBtn = ev.done ? '↩ إرجاع' : (ev.type === 'project' || ev.type === 'assignment' ? '✔ تم التسليم' : '✔ تم');
+  return `<article class="card ${fin ? 'fin' : ''}" style="--c:${s.color}">
+    <span class="badge">${TYPES[ev.type]}</span><span class="subj">${esc(s.name)}</span>
+    <h3>${esc(ev.title)}</h3>
+    <div class="muted">📅 ${fmtDT(t)}</div>
+    ${cd}
+    ${ev.content ? `<p class="muted">📖 ${esc(ev.content)}</p>` : ''}
+    ${lessons}${rems}
+    <div class="actions">
+      <button class="sm" data-act="done" data-ev="${ev.id}">${doneBtn}</button>
+      <button class="sm" data-act="edit" data-ev="${ev.id}">✏️ تعديل</button>
+      <button class="sm danger" data-act="del" data-ev="${ev.id}">حذف</button>
+    </div></article>`;
+}
+
+function renderHome() {
+  const all = [...S.events].sort((a, b) => ms(a) - ms(b));
+  const up = all.filter(e => !isFinished(e)), fin = all.filter(isFinished).reverse();
+  let h = '';
+  if (!S.subjects.length) h = '<div class="empty">ابدأ بإضافة موادك من تبويب "المواد"، وبعدها أضف مواعيدك.</div>';
+  else if (!up.length) h = '<div class="empty">ما فيه مواعيد قادمة. اضغط "＋ موعد" وأضف أول موعد.</div>';
+  h += up.map(cardHTML).join('');
+  if (fin.length) h += `<details style="margin-top:16px"><summary>المنتهية (${fin.length})</summary><div style="margin-top:10px">${fin.map(cardHTML).join('')}</div></details>`;
+  $('#homeList').innerHTML = h;
+}
+
+function renderSubj() {
+  $('#subjList').innerHTML = S.subjects.length ? S.subjects.map(s => {
+    const n = S.events.filter(e => e.subjectId === s.id).length, p = Math.round(subjProgress(s.id) * 100);
+    return `<div class="card" style="--c:${s.color}"><div class="row between"><b>${esc(s.name)}</b><span class="muted">${n} موعد · ${p}%</span></div>
+      <div class="bar"><i style="width:${p}%"></i></div>
+      <div class="actions"><button class="sm" data-act="renSubj" data-id="${s.id}">✏️ تسمية</button>
+      <button class="sm danger" data-act="delSubj" data-id="${s.id}">حذف</button></div></div>`;
+  }).join('') : '<div class="empty">ما أضفت أي مادة للحين.</div>';
+}
+
+/* ---------- 5) خطة المذاكرة: توزيع الدروس المتبقية على الأيام ---------- */
+function buildPlan() {
+  const now = Date.now(), today = keyOf(now), plan = {};
+  S.events.forEach(ev => {
+    if (isFinished(ev) || ms(ev) < now) return;
+    const idx = ev.lessons.map((l, i) => l.done ? -1 : i).filter(i => i >= 0);
+    // دروس خلصتها اليوم تبقى ظاهرة (مشطوبة) في قسم اليوم
+    ev.lessons.forEach((l, i) => { if (l.done && l.doneOn === today) (plan[today] = plan[today] || []).push({ev, li: i, done: true}); });
+    if (!idx.length) return;
+    let days = range(today, addDays(keyOf(ms(ev)), -1));
+    if (!days.length) days = [today];                      // الموعد اليوم
+    idx.forEach((li, k) => {
+      const d = days[Math.floor(k * days.length / idx.length)];
+      (plan[d] = plan[d] || []).push({ev, li, done: false});
+    });
+  });
+  return plan;
+}
+function renderPlan() {
+  const plan = buildPlan(), today = keyOf(Date.now()), keys = Object.keys(plan).sort();
+  const per = +S.settings.perLesson || 1, cap = +S.settings.hours || 3;
+  if (!keys.length) { $('#planList').innerHTML = '<div class="empty">ما فيه دروس مجدولة. أضف امتحان أو كويز وحط له قائمة دروس (سطر لكل درس).</div>'; return; }
+  $('#planList').innerHTML = keys.map(k => {
+    const items = plan[k], pend = items.filter(x => !x.done).length, hrs = pend * per;
+    const label = k === today ? 'اليوم · ' + fmtDay(k) : k === addDays(today, 1) ? 'بكرة · ' + fmtDay(k) : fmtDay(k);
+    return `<div class="day ${k === today ? 'today' : ''}"><h3><span>${label}</span><span class="muted">${hrs} س</span></h3>
+      ${hrs > cap ? '<div class="warn">⚠️ أكثر من الوقت المتاح باليوم، فكر تبدأ بدري أو تزيد الساعات</div>' : ''}
+      ${items.map(x => { const l = x.ev.lessons[x.li], s = subjOf(x.ev.subjectId);
+        return `<label class="lesson ${x.done ? 'done' : ''}" style="margin:0;color:inherit"><input type="checkbox" data-act="lesson" data-ev="${x.ev.id}" data-i="${x.li}" ${x.done ? 'checked' : ''}>
+        <span><i class="dot" style="--c:${s.color}"></i>${esc(l.n)} <small class="muted">· ${esc(x.ev.title)}</small></span></label>`; }).join('')}</div>`;
+  }).join('');
+}
+
+function render() { renderHome(); renderPlan(); renderSubj(); }
+
+/* ---------- 4) نموذج الموعد ---------- */
+let editingId = null, tmpRem = [];
+function renderChips() {
+  const all = [...new Set([...PRESETS, ...tmpRem])].sort((a, b) => b - a);
+  $('#chips').innerHTML = all.map(m => `<button type="button" class="chip ${tmpRem.includes(m) ? 'on' : ''}" data-act="chip" data-m="${m}">${remLabel(m)}</button>`).join('');
+}
+function openForm(id) {
+  if (!S.subjects.length) { toast('أضف مادة أول من تبويب "المواد"'); showTab('subj'); return; }
+  editingId = id || null;
+  const ev = S.events.find(e => e.id === id), f = $('#evForm').elements;
+  f.subject.innerHTML = S.subjects.map(s => `<option value="${s.id}">${esc(s.name)}</option>`).join('');
+  $('#evTitle').textContent = ev ? 'تعديل الموعد' : 'موعد جديد';
+  f.subject.value = ev ? ev.subjectId : S.subjects[0].id;
+  f.type.value = ev ? ev.type : 'exam';
+  f.title.value = ev ? ev.title : '';
+  f.dt.value = ev ? ev.dt : '';
+  f.content.value = ev ? ev.content : '';
+  f.lessons.value = ev ? ev.lessons.map(l => l.n).join('\n') : '';
+  tmpRem = ev ? ev.reminders.slice() : [1440, 120];
+  renderChips();
+  $('#evDlg').showModal();
+}
+function saveEvent(e) {
+  e.preventDefault();
+  const f = $('#evForm').elements;
+  if (!f.title.value.trim() || !f.dt.value) return;
+  const old = S.events.find(x => x.id === editingId);
+  const names = f.lessons.value.split('\n').map(s => s.trim()).filter(Boolean);
+  const lessons = names.map(n => { const o = old && old.lessons.find(l => l.n === n); return {n, done: !!(o && o.done), doneOn: o && o.doneOn}; });
+  const ev = {id: old ? old.id : uid(), subjectId: f.subject.value, type: f.type.value, title: f.title.value.trim(),
+    dt: f.dt.value, content: f.content.value.trim(), lessons, reminders: [...tmpRem].sort((a, b) => b - a), done: old ? old.done : false};
+  // تنظيف التذكيرات القديمة وتعليم الفائتة كمرسلة حتى لا تنبه فجأة
+  Object.keys(S.fired).filter(k => k.startsWith(ev.id + ':')).forEach(k => delete S.fired[k]);
+  ev.reminders.forEach(m => { if (Date.now() >= ms(ev) - m * 6e4) S.fired[ev.id + ':' + m] = 1; });
+  if (old) S.events[S.events.indexOf(old)] = ev; else S.events.push(ev);
+  save(); $('#evDlg').close(); render();
+}
+
+/* ---------- 6) تصدير التقويم (.ics) ---------- */
+const icsEsc = s => String(s).replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\n/g, '\\n');
+function icsDate(t) { const d = new Date(t); return d.getUTCFullYear() + pad(d.getUTCMonth() + 1) + pad(d.getUTCDate()) + 'T' + pad(d.getUTCHours()) + pad(d.getUTCMinutes()) + '00Z'; }
+function fold(line) { // السطر لا يزيد عن 75 بايت
+  const enc = new TextEncoder(); let out = '', cur = '', bytes = 0;
+  for (const ch of line) { const b = enc.encode(ch).length; if (bytes + b > 73) { out += cur + '\r\n '; cur = ''; bytes = 1; } cur += ch; bytes += b; }
+  return out + cur;
+}
+function buildICS(withPlan) {
+  const L = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//StudyPlanner//AR//EN', 'CALSCALE:GREGORIAN', 'X-WR-CALNAME:مخطط الدراسة'];
+  const stamp = icsDate(Date.now());
+  S.events.forEach(ev => {
+    const t = ms(ev), dur = ev.type === 'exam' ? 120 : 30;
+    L.push('BEGIN:VEVENT', 'UID:' + ev.id + '@studyplanner', 'DTSTAMP:' + stamp, 'DTSTART:' + icsDate(t), 'DTEND:' + icsDate(t + dur * 6e4),
+      'SUMMARY:' + icsEsc(TYPES[ev.type] + ': ' + ev.title + ' (' + subjOf(ev.subjectId).name + ')'),
+      'DESCRIPTION:' + icsEsc(ev.content + (ev.lessons.length ? '\n' + ev.lessons.map(l => '- ' + l.n).join('\n') : '')));
+    ev.reminders.forEach(m => L.push('BEGIN:VALARM', 'ACTION:DISPLAY', 'DESCRIPTION:' + icsEsc(ev.title), 'TRIGGER:-PT' + m + 'M', 'END:VALARM'));
+    L.push('END:VEVENT');
+  });
+  if (withPlan) {
+    const plan = buildPlan();
+    Object.keys(plan).forEach(k => {
+      const todo = plan[k].filter(x => !x.done); if (!todo.length) return;
+      L.push('BEGIN:VEVENT', 'UID:plan-' + k + '@studyplanner', 'DTSTAMP:' + stamp, 'DTSTART;VALUE=DATE:' + k.replace(/-/g, ''), 'DTEND;VALUE=DATE:' + addDays(k, 1).replace(/-/g, ''),
+        'SUMMARY:' + icsEsc('مذاكرة: ' + todo.length + ' درس'),
+        'DESCRIPTION:' + icsEsc(todo.map(x => '- ' + x.ev.lessons[x.li].n + ' (' + subjOf(x.ev.subjectId).name + ')').join('\n')), 'END:VEVENT');
+    });
+  }
+  L.push('END:VCALENDAR');
+  return L.map(fold).join('\r\n');
+}
+function download(name, text, type) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([text], {type}));
+  a.download = name; document.body.appendChild(a); a.click(); a.remove();
+}
+function exportICS(withPlan) {
+  if (!S.events.length) return toast('ما فيه مواعيد للتصدير');
+  download('study-planner.ics', buildICS(withPlan), 'text/calendar;charset=utf-8');
+  toast('تم! افتح الملف على جوالك وأضفه للتقويم');
+}
+
+/* ---------- 7) التذكيرات داخل الصفحة ---------- */
+function toast(msg) {
+  const d = document.createElement('div'); d.className = 'toast';
+  d.innerHTML = `<span>${esc(msg)}</span><button>✕</button>`;
+  d.querySelector('button').onclick = () => d.remove();
+  $('#toasts').appendChild(d); setTimeout(() => d.remove(), 12000);
+}
+function checkReminders() {
+  const now = Date.now(); let changed = false;
+  S.events.forEach(ev => {
+    if (ev.done) return;
+    ev.reminders.forEach(m => {
+      const k = ev.id + ':' + m, t = ms(ev);
+      if (!S.fired[k] && now >= t - m * 6e4 && now < t) {
+        S.fired[k] = 1; changed = true;
+        const msg = `${TYPES[ev.type]}: ${ev.title} (${subjOf(ev.subjectId).name}) · ${countdown(t).txt}`;
+        toast('🔔 ' + msg);
+        if ('Notification' in window && Notification.permission === 'granted') new Notification('تذكير', {body: msg});
+      }
+    });
+  });
+  if (changed) save();
+}
+
+/* ---------- الوضع الليلي والتبويبات ---------- */
+function applyTheme() {
+  const dark = S.settings.dark === null ? matchMedia('(prefers-color-scheme: dark)').matches : S.settings.dark;
+  document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+}
+function showTab(v) {
+  document.querySelectorAll('.view').forEach(x => x.classList.toggle('on', x.id === 'v-' + v));
+  document.querySelectorAll('nav button').forEach(b => b.classList.toggle('on', b.dataset.v === v));
+  window.scrollTo(0, 0);
+}
+
+/* ---------- 8) الأحداث ---------- */
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-act]'); if (!b || b.type === 'checkbox') return;
+  const d = b.dataset, ev = S.events.find(x => x.id === d.ev);
+  switch (d.act) {
+    case 'tab': showTab(d.v); break;
+    case 'theme': S.settings.dark = document.documentElement.dataset.theme !== 'dark'; save(); applyTheme(); break;
+    case 'newEvent': openForm(); break;
+    case 'closeDlg': $('#evDlg').close(); break;
+    case 'edit': openForm(d.ev); break;
+    case 'del': if (confirm('حذف هذا الموعد؟')) { S.events = S.events.filter(x => x.id !== d.ev); save(); render(); } break;
+    case 'done': ev.done = !ev.done; save(); render(); break;
+    case 'chip': { const m = +d.m; tmpRem = tmpRem.includes(m) ? tmpRem.filter(x => x !== m) : [...tmpRem, m]; renderChips(); break; }
+    case 'addRem': { const m = Math.round((+$('#cuN').value || 0) * +$('#cuU').value); if (m > 0 && !tmpRem.includes(m)) tmpRem.push(m); renderChips(); break; }
+    case 'ics': exportICS(false); break;
+    case 'ics2': exportICS($('#icsPlan').checked); break;
+    case 'renSubj': { const s = S.subjects.find(x => x.id === d.id), n = prompt('الاسم الجديد:', s.name); if (n && n.trim()) { s.name = n.trim(); save(); render(); } break; }
+    case 'delSubj': if (confirm('حذف المادة وكل مواعيدها؟')) { S.subjects = S.subjects.filter(x => x.id !== d.id); S.events = S.events.filter(x => x.subjectId !== d.id); save(); render(); } break;
+    case 'notif': if (!('Notification' in window)) toast('متصفحك ما يدعم التنبيهات'); else Notification.requestPermission().then(p => toast(p === 'granted' ? 'تم تفعيل التنبيهات' : 'ما تم التفعيل')); break;
+    case 'exportJson': download('study-planner-backup.json', JSON.stringify(S, null, 2), 'application/json'); break;
+    case 'importJson': $('#importFile').click(); break;
+    case 'wipe': if (confirm('تمسح كل البيانات نهائياً؟') && confirm('متأكد؟ ما يمديك ترجعها.')) { S = load.call(null); S = {subjects: [], events: [], settings: {hours: 3, perLesson: 1, dark: S.settings.dark}, fired: {}}; save(); render(); toast('تم المسح'); } break;
+  }
+});
+// تعليم الدروس (checkbox)
+document.addEventListener('change', e => {
+  const c = e.target.closest('[data-act=lesson]'); if (!c) return;
+  const ev = S.events.find(x => x.id === c.dataset.ev), l = ev.lessons[+c.dataset.i];
+  l.done = c.checked; if (c.checked) l.doneOn = keyOf(Date.now()); else delete l.doneOn;
+  save(); render();
+});
+$('#evForm').addEventListener('submit', saveEvent);
+$('#subjForm').addEventListener('submit', e => {
+  e.preventDefault(); const f = e.target.elements;
+  S.subjects.push({id: uid(), name: f.name.value.trim(), color: f.color.value});
+  save(); e.target.reset(); f.color.value = '#' + Math.floor(Math.random() * 0xffffff).toString(16).padStart(6, '0'); render();
+});
+$('#hoursPerDay').addEventListener('change', e => { S.settings.hours = +e.target.value || 3; save(); renderPlan(); });
+$('#perLesson').addEventListener('change', e => { S.settings.perLesson = +e.target.value || 1; save(); renderPlan(); });
+$('#importFile').addEventListener('change', e => {
+  const file = e.target.files[0]; if (!file) return;
+  const r = new FileReader();
+  r.onload = () => {
+    try {
+      const j = JSON.parse(r.result);
+      if (!Array.isArray(j.subjects) || !Array.isArray(j.events)) throw 0;
+      if (!confirm('الاستيراد يستبدل بياناتك الحالية. تكمل؟')) return;
+      localStorage.setItem(KEY, JSON.stringify(j)); S = load(); applyTheme(); init(); toast('تم الاستيراد');
+    } catch (err) { toast('الملف غير صالح'); }
+  };
+  r.readAsText(file); e.target.value = '';
+});
+
+/* ---------- تشغيل ---------- */
+function init() {
+  $('#hoursPerDay').value = S.settings.hours; $('#perLesson').value = S.settings.perLesson;
+  render(); checkReminders();
+}
+applyTheme(); init();
+setInterval(() => { renderHome(); renderPlan(); checkReminders(); }, 30000);
+</script>
+</body>
+</html>
